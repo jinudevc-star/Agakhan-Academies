@@ -39,9 +39,10 @@ class SopRepository(private val dao: SopDao) {
         dao.searchAssetsOffline(query.trim(), system)
 
     private val httpClient = OkHttpClient.Builder()
-        .connectTimeout(12, TimeUnit.SECONDS)
-        .readTimeout(15, TimeUnit.SECONDS)
-        .writeTimeout(15, TimeUnit.SECONDS)
+        .connectTimeout(3, TimeUnit.SECONDS)
+        .readTimeout(5, TimeUnit.SECONDS)
+        .writeTimeout(5, TimeUnit.SECONDS)
+        .callTimeout(8, TimeUnit.SECONDS)
         .build()
 
     suspend fun ensureSeeded() = withContext(Dispatchers.IO) {
@@ -403,7 +404,6 @@ class SopRepository(private val dao: SopDao) {
             result = resultStatus,
             by = recorder
         )
-        var synced = false
         val intervalDays = SopScheduleParser.intervalDays(freqCode) ?: 1.0
         val nextScheduledForFreqIso = SopScheduleParser.isoFromMillis(
             nowMs + (intervalDays * 86_400_000.0).toLong()
@@ -438,13 +438,7 @@ class SopRepository(private val dao: SopDao) {
             ),
             syncedToServer = false
         )
-        if (lanServerUrl.isNotBlank()) {
-            synced = tryPushToLanServer(lanServerUrl, tempAsset, logEntry)
-        }
-        val finalAsset = tempAsset.copy(pendingOfflineSync = !synced)
-        dao.upsertAsset(finalAsset)
-        dao.insertLog(logEntry.copy(syncedToServer = synced))
-        finalAsset
+        persistLocallyThenSync(tempAsset, logEntry, lanServerUrl)
     }
 
     suspend fun quickUpdateStatus(
@@ -473,7 +467,6 @@ class SopRepository(private val dao: SopDao) {
         if (changes.isEmpty()) {
             changes["status"] = listOf(current.status, newStatus)
         }
-        var synced = false
         val tempAsset = current.copy(
             status = newStatus,
             location = resolvedLocation,
@@ -492,13 +485,7 @@ class SopRepository(private val dao: SopDao) {
             changesJson = SopJson.encodeChanges(changes),
             syncedToServer = false
         )
-        if (lanServerUrl.isNotBlank()) {
-            synced = tryPushToLanServer(lanServerUrl, tempAsset, logEntry)
-        }
-        val finalAsset = tempAsset.copy(pendingOfflineSync = !synced)
-        dao.upsertAsset(finalAsset)
-        dao.insertLog(logEntry.copy(syncedToServer = synced))
-        finalAsset
+        persistLocallyThenSync(tempAsset, logEntry, lanServerUrl)
     }
 
     suspend fun updateAssetDetails(
@@ -545,7 +532,6 @@ class SopRepository(private val dao: SopDao) {
         val at = SopScheduleParser.nowIso()
         val nowMs = System.currentTimeMillis()
         val recorder = by.ifBlank { "Duty Operator" }
-        var synced = false
         val tempAsset = current.copy(
             status = status.trim(),
             criticality = criticality.trim(),
@@ -571,13 +557,7 @@ class SopRepository(private val dao: SopDao) {
             changesJson = SopJson.encodeChanges(changes),
             syncedToServer = false
         )
-        if (lanServerUrl.isNotBlank()) {
-            synced = tryPushToLanServer(lanServerUrl, tempAsset, logEntry)
-        }
-        val finalAsset = tempAsset.copy(pendingOfflineSync = !synced)
-        dao.upsertAsset(finalAsset)
-        dao.insertLog(logEntry.copy(syncedToServer = synced))
-        finalAsset
+        persistLocallyThenSync(tempAsset, logEntry, lanServerUrl)
     }
 
     suspend fun setMaintenanceDueDate(
@@ -805,6 +785,22 @@ class SopRepository(private val dao: SopDao) {
         } catch (_: Exception) {
             false
         }
+    }
+
+    private suspend fun persistLocallyThenSync(
+        asset: AssetEntity,
+        log: MaintenanceLogEntity,
+        lanServerUrl: String
+    ): AssetEntity {
+        dao.upsertAsset(asset)
+        val logId = dao.insertLog(log)
+        if (lanServerUrl.isBlank() || !tryPushToLanServer(lanServerUrl, asset, log)) {
+            return asset
+        }
+
+        dao.markAssetSyncedIfRevisionMatches(asset.id, asset.rev)
+        dao.markLogSynced(logId)
+        return dao.getAssetById(asset.id) ?: asset
     }
 
     private fun csvCell(v: String?): String {

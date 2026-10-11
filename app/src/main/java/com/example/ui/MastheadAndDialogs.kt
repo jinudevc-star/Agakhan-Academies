@@ -921,7 +921,7 @@ fun AskAiMaintenanceCard(
             }
 
             Text(
-                text = "Powered by gemini-3.1-pro-preview (${if (aiState.highThinkingEnabled) "ThinkingLevel.HIGH" else "ThinkingLevel.LOW"}) · Grounded strictly on the SOP register & history.",
+                text = "Gemini AI requires internet (${if (aiState.highThinkingEnabled) "ThinkingLevel.HIGH" else "ThinkingLevel.LOW"}) · Grounded strictly on the SOP register & history. Register features work offline.",
                 style = MaterialTheme.typography.bodySmall,
                 color = akah.muted
             )

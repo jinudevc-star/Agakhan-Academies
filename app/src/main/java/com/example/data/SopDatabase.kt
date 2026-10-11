@@ -104,6 +104,9 @@ interface SopDao {
         updatedAt: Long = System.currentTimeMillis()
     )
 
+    @Query("UPDATE assets SET pending_offline_sync = 0 WHERE id = :assetId AND rev = :rev")
+    suspend fun markAssetSyncedIfRevisionMatches(assetId: String, rev: Int): Int
+
     @Query("UPDATE assets SET pending_offline_sync = 0")
     suspend fun clearAllPendingOfflineSyncFlags()
 
@@ -155,7 +158,10 @@ interface SopDao {
     suspend fun getAllLogsOnce(): List<MaintenanceLogEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertLog(log: MaintenanceLogEntity)
+    suspend fun insertLog(log: MaintenanceLogEntity): Long
+
+    @Query("UPDATE maintenance_logs SET synced_to_server = 1 WHERE logId = :logId")
+    suspend fun markLogSynced(logId: Long)
 }
 
 @Database(
