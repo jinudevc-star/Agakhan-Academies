@@ -1,0 +1,43 @@
+package com.example.ui.theme
+
+import androidx.compose.ui.graphics.Color
+
+// AKAH Plant-Room Signage Palette (Light)
+val AkahBgLight = Color(0xFFF3F6F4)
+val AkahSurfaceLight = Color(0xFFFFFFFF)
+val AkahSunkenLight = Color(0xFFEAF0EC)
+val AkahInkLight = Color(0xFF15201A)
+val AkahMutedLight = Color(0xFF56645C)
+val AkahLineLight = Color(0xFFD6E0DA)
+val AkahAccentLight = Color(0xFF00804A)
+val AkahAccentSoftLight = Color(0xFFE1F2E8)
+val AkahMaroonLight = Color(0xFF8B1E3F)
+
+val AkahOkLight = Color(0xFF1E7B4F)
+val AkahOkSoftLight = Color(0xFFE3F3EA)
+val AkahWarnLight = Color(0xFF9A6200)
+val AkahWarnSoftLight = Color(0xFFFCF1DC)
+val AkahCritLight = Color(0xFFB3261E)
+val AkahCritSoftLight = Color(0xFFFBE7E5)
+val AkahOffLight = Color(0xFF5F6B65)
+val AkahOffSoftLight = Color(0xFFE8ECEA)
+
+// AKAH Plant-Room Signage Palette (Dark)
+val AkahBgDark = Color(0xFF0E1411)
+val AkahSurfaceDark = Color(0xFF161F1A)
+val AkahSunkenDark = Color(0xFF111915)
+val AkahInkDark = Color(0xFFE6EEE9)
+val AkahMutedDark = Color(0xFF9AABA1)
+val AkahLineDark = Color(0xFF2A3730)
+val AkahAccentDark = Color(0xFF34C27F)
+val AkahAccentSoftDark = Color(0xFF15301F)
+val AkahMaroonDark = Color(0xFFE38AA6)
+
+val AkahOkDark = Color(0xFF5BD69A)
+val AkahOkSoftDark = Color(0xFF133024)
+val AkahWarnDark = Color(0xFFF2B44C)
+val AkahWarnSoftDark = Color(0xFF33270F)
+val AkahCritDark = Color(0xFFFF8A80)
+val AkahCritSoftDark = Color(0xFF3A1714)
+val AkahOffDark = Color(0xFFA8B3AD)
+val AkahOffSoftDark = Color(0xFF232C27)

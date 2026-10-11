@@ -1,0 +1,6 @@
+{
+  "name": "AKAH SOP Register",
+  "description": "Campus asset register and SOP maintenance dashboard with QR code scanning, status updates, and AI maintenance assistant for Aga Khan Academy, Hyderabad.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

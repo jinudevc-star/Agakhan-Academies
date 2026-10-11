@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Outer Seal Circle -->
+    <path
+        android:fillColor="#00804A"
+        android:pathData="M24,2C11.85,2 2,11.85 2,24s9.85,22 22,22 22,-9.85 22,-22S36.15,2 24,2z" />
+    <!-- Inner Ring -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M24,5C13.51,5 5,13.51 5,24s8.51,19 19,19 19,-8.51 19,-19S34.49,5 24,5zM24,41c-9.39,0 -17,-7.61 -17,-17S14.61,7 24,7s17,7.61 17,17 -7.61,17 -17,17z" />
+    <!-- Geometric 8-Point Star Crest -->
+    <path
+        android:fillColor="#E1F2E8"
+        android:pathData="M24,9L27.5,16.5L35,13L31.5,20.5L39,24L31.5,27.5L35,35L27.5,31.5L24,39L20.5,31.5L13,35L16.5,27.5L9,24L16.5,20.5L13,13L20.5,16.5Z" />
+    <!-- Center Emblem Book/Lantern -->
+    <path
+        android:fillColor="#8B1E3F"
+        android:pathData="M24,16c-4.42,0 -8,3.58 -8,8s3.58,8 8,8 8,-3.58 8,-8 -3.58,-8 -8,-8z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M24,19l4,5 -4,5 -4,-5z" />
+</vector>
