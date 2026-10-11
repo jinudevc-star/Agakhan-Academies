@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102a43">
+  <title>AKAH AssetTrack - Offline Register</title>
+  <style>
+    :root{color-scheme:light;--navy:#102a43;--blue:#1769aa;--teal:#137c75;--bg:#f3f6f8;--line:#d9e2ec;--muted:#526579;--red:#b42318}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:#162b3c;font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+    header{background:var(--navy);color:#fff;padding:18px max(20px,calc((100% - 1160px)/2));display:flex;align-items:center;justify-content:space-between;gap:16px}
+    header h1{font-size:20px;margin:0}header p{margin:2px 0 0;color:#d1deea;font-size:13px}
+    main{max-width:1160px;margin:22px auto;padding:0 18px 40px}.banner{padding:11px 14px;background:#e4f4ed;border:1px solid #b7dfc9;border-radius:10px;margin-bottom:16px}
+    .toolbar,.card,.asset{background:#fff;border:1px solid var(--line);border-radius:12px}.toolbar{padding:12px;display:flex;gap:9px;flex-wrap:wrap;margin-bottom:16px}
+    button,.button{border:0;border-radius:8px;padding:9px 13px;background:var(--blue);color:#fff;font:inherit;font-weight:650;cursor:pointer}
+    button.secondary,.button.secondary{background:#e9f0f7;color:var(--navy)}button.danger{background:#fff0ef;color:var(--red)}
+    input,select,textarea{font:inherit;border:1px solid #bdcbd8;border-radius:8px;padding:9px 10px;background:white;color:#162b3c;width:100%}
+    input[type=file]{max-width:240px}.toolbar input[type=search]{flex:1;min-width:220px}.toolbar button{white-space:nowrap}
+    .summary{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}.pill{background:#e9f0f7;border-radius:999px;padding:5px 11px;font-size:13px}
+    .layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(290px,.8fr);gap:16px;align-items:start}.card{padding:16px}.card h2{font-size:17px;margin:0 0 12px}
+    .asset-list{display:grid;gap:10px}.asset{padding:13px;display:grid;grid-template-columns:1fr auto;gap:10px}.asset h3{margin:0;font-size:16px}.asset p{margin:3px 0;color:var(--muted);font-size:13px}
+    .status{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700;background:#e4f4ed;color:#176b43}.status.attention{background:#fff5d9;color:#805600}.status.out{background:#fee4e2;color:#a11b13}
+    .actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:flex-end}.actions button{padding:7px 10px;font-size:13px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{display:grid;gap:4px}.field.full{grid-column:1/-1}.field label{font-size:12px;color:var(--muted);font-weight:650}
+    textarea{min-height:78px;resize:vertical}.form-actions{display:flex;gap:8px;margin-top:12px}
+    .empty{color:var(--muted);padding:20px 4px}.hint{font-size:12px;color:var(--muted)}dialog{border:1px solid var(--line);border-radius:14px;width:min(530px,calc(100% - 24px));padding:20px;box-shadow:0 20px 70px #102a4333}dialog::backdrop{background:#102a4380}
+    .qr-box{text-align:center;padding:8px}.qr-box canvas{width:min(260px,80vw);height:auto;image-rendering:pixelated;border:10px solid #fff;box-shadow:0 1px 8px #102a4322}.qr-box p{word-break:break-all}
+    .scanner{width:100%;max-height:300px;background:#111;border-radius:10px}.notice{padding:9px 11px;border-radius:8px;background:#fff5d9;font-size:13px}.ai-answer{white-space:pre-wrap;background:#f5f8fb;padding:12px;border-radius:8px}
+    footer{margin-top:16px;color:var(--muted);font-size:12px}
+    @media(max-width:760px){.layout{grid-template-columns:1fr}header{align-items:flex-start;flex-direction:column}.asset{grid-template-columns:1fr}.actions{justify-content:flex-start}}
+    @media print{body{background:white}.no-print,header,.banner,.toolbar,.summary,.layout>.card:last-child,footer{display:none!important}main{max-width:none;margin:0;padding:0}.layout{display:block}.asset-list{grid-template-columns:repeat(2,1fr)}.asset{break-inside:avoid}}
+  </style>
+</head>
+<body>
+  <header><div><h1>AKAH AssetTrack</h1><p>Campus asset register · works offline on this device</p></div><button class="secondary no-print" id="helpBtn">Quick guide</button></header>
+  <main>
+    <div class="banner"><strong>Offline ready.</strong> Asset records and maintenance history are saved in this browser on this device. Gemini requires internet and an API key; it is optional.</div>
+    <section class="toolbar no-print">
+      <input id="search" type="search" placeholder="Search ID, asset, location, system or status">
+      <button id="newBtn">+ Add asset</button>
+      <button id="scanBtn" class="secondary">Scan QR</button>
+      <button id="exportBtn" class="secondary">Export backup</button>
+      <label class="button secondary" for="importFile">Import backup</label><input id="importFile" type="file" accept=".json,application/json" hidden>
+      <button id="printBtn" class="secondary">Print register</button>
+    </section>
+    <div class="summary" id="summary"></div>
+    <section class="layout">
+      <div class="card"><h2>Asset register</h2><div class="asset-list" id="assetList"></div></div>
+      <aside class="card no-print">
+        <h2 id="formHeading">Add an asset</h2>
+        <form id="assetForm">
+          <input id="editId" type="hidden">
+          <div class="form-grid">
+            <div class="field"><label for="assetId">Asset ID *</label><input id="assetId" required placeholder="AKA-HYD-ELE-001"></div>
+            <div class="field"><label for="name">Asset name *</label><input id="name" required placeholder="Distribution board"></div>
+            <div class="field"><label for="system">System</label><input id="system" placeholder="Electrical"></div>
+            <div class="field"><label for="criticality">Criticality</label><select id="criticality"><option>Medium</option><option>Low</option><option>High</option><option>Critical</option></select></div>
+            <div class="field"><label for="status">Status</label><select id="status"><option>In service</option><option>Needs attention</option><option>Out of service</option></select></div>
+            <div class="field"><label for="location">Location</label><input id="location" placeholder="Building / room"></div>
+            <div class="field"><label for="owner">Responsible person</label><input id="owner"></div>
+            <div class="field"><label for="makeModel">Make / model</label><input id="makeModel"></div>
+            <div class="field full"><label for="notes">Notes / maintenance details</label><textarea id="notes"></textarea></div>
+          </div>
+          <div class="form-actions"><button type="submit">Save on this device</button><button type="button" class="secondary" id="clearFormBtn">Clear</button></div>
+        </form>
+        <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+        <h2>Gemini maintenance assistant</h2>
+        <div class="field"><label for="apiKey">Gemini API key (kept only in this tab)</label><input id="apiKey" type="password" autocomplete="off" placeholder="Paste key for this session"></div>
+        <p class="hint">Gemini requests send your question and selected asset details to Google. Do not include confidential or personal data unless your Academy permits it.</p>
+        <div class="field"><label for="aiAsset">Asset context</label><select id="aiAsset"><option value="">Whole register</option></select></div>
+        <div class="field" style="margin-top:8px"><label for="aiQuestion">Question</label><textarea id="aiQuestion" placeholder="Which assets need attention first?"></textarea></div>
+        <button id="askAiBtn" style="margin-top:9px">Ask Gemini (internet required)</button>
+        <div id="aiResult" style="margin-top:12px"></div>
+      </aside>
+    </section>
+    <footer>This standalone HTML file does not upload or sync register data. Use “Export backup” regularly. Browser storage can be cleared by browser settings; keep a backup in a safe Academy-approved location.</footer>
+  </main>
+  <dialog id="qrDialog"><h2>Offline asset QR</h2><div id="qrMount" class="qr-box"></div><div class="form-actions no-print"><button id="downloadQrBtn">Download PNG</button><button class="secondary" id="closeQrBtn">Close</button></div></dialog>
+  <dialog id="scanDialog"><h2>Scan asset QR</h2><p class="hint">Live camera scanning needs a supported browser and camera permission. Opening a local file may block camera access; use manual entry or open this page from HTTPS/localhost.</p><video id="video" class="scanner" playsinline></video><div class="field" style="margin-top:10px"><label for="manualQr">Or enter the asset ID from a QR</label><input id="manualQr" placeholder="AKA-HYD-ELE-001"></div><div class="form-actions"><button id="manualScanBtn">Find asset</button><button id="closeScanBtn" class="secondary">Close</button></div><p id="scanStatus" class="hint"></p></dialog>
+  <dialog id="helpDialog"><h2>Quick guide</h2><ol><li>Add assets and save them locally in this browser.</li><li>Use the QR button on an asset to display/download its QR. The QR contains the asset ID and is generated offline.</li><li>Scan a QR from a secure browser page on a device with a camera, or type the ID manually.</li><li>Use Edit to update details, or Check to record maintenance status and notes.</li><li>Export a JSON backup regularly. Import a backup to restore records on this device.</li><li>Gemini is optional and needs internet plus your own API key; records remain local unless you explicitly ask Gemini a question.</li></ol><div class="form-actions"><button id="closeHelpBtn">Got it</button></div></dialog>
+  <script>
+  (() => {
+    "use strict";
+    const STORAGE_KEY = "akah.assettrack.offline.v1";
+    const $ = id => document.getElementById(id);
+    let assets = load();
+    let displayedQr = "";
+    let scannerStream = null;
+    function load(){try{const value=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");return Array.isArray(value)?value:[]}catch{return[]}}
+    function persist(){localStorage.setItem(STORAGE_KEY,JSON.stringify(assets));render()}
+    function esc(value){return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+    function statusClass(s){return s==="Out of service"?"out":s==="Needs attention"?"attention":""}
+    function render(){
+      const query=$("search").value.trim().toLowerCase();
+      const shown=assets.filter(a=>[a.id,a.name,a.location,a.system,a.status,a.owner].some(v=>String(v||"").toLowerCase().includes(query)));
+      $("summary").innerHTML=`<span class="pill"><b>${assets.length}</b> assets on this device</span><span class="pill">${assets.filter(a=>a.status==="Needs attention"||a.status==="Out of service").length} need attention</span><span class="pill">Saved locally · no account required</span>`;
+      $("assetList").innerHTML=shown.length?shown.map(a=>`<article class="asset"><div><h3>${esc(a.name)} <span class="hint">${esc(a.id)}</span></h3><p>${esc(a.system||"Unspecified system")} · ${esc(a.location||"Location not set")} · ${esc(a.criticality||"Medium")}</p><p><span class="status ${statusClass(a.status)}">${esc(a.status||"In service")}</span> ${a.logs?.length?`· ${a.logs.length} maintenance entries`:""}</p>${a.notes?`<p>${esc(a.notes)}</p>`:""}</div><div class="actions no-print"><button class="secondary" data-action="qr" data-id="${esc(a.id)}">QR</button><button class="secondary" data-action="check" data-id="${esc(a.id)}">Check</button><button class="secondary" data-action="edit" data-id="${esc(a.id)}">Edit</button><button class="danger" data-action="delete" data-id="${esc(a.id)}">Delete</button></div></article>`).join(""):`<p class="empty">${assets.length?"No matching assets.":"No assets yet. Add one to get started."}</p>`;
+      const select=$("aiAsset"),old=select.value;select.innerHTML='<option value="">Whole register</option>'+assets.map(a=>`<option value="${esc(a.id)}">${esc(a.id)} · ${esc(a.name)}</option>`).join("");if(assets.some(a=>a.id===old))select.value=old;
+    }
+    function clearForm(){ $("assetForm").reset();$("editId").value="";$("formHeading").textContent="Add an asset";$("assetId").disabled=false;window.scrollTo({top:0,behavior:"smooth"})}
+    function editAsset(id){const a=assets.find(x=>x.id===id);if(!a)return;$("editId").value=a.id;$("assetId").value=a.id;$("assetId").disabled=true;$("name").value=a.name;$("system").value=a.system||"";$("criticality").value=a.criticality||"Medium";$("status").value=a.status||"In service";$("location").value=a.location||"";$("owner").value=a.owner||"";$("makeModel").value=a.makeModel||"";$("notes").value=a.notes||"";$("formHeading").textContent="Edit asset · "+a.id;window.scrollTo({top:0,behavior:"smooth"})}
+    function makeQrCanvas(text,scale=8){
+      const matrix=qrAlphanumeric(text),n=matrix.length,canvas=document.createElement("canvas");canvas.width=canvas.height=n*scale;
+      const ctx=canvas.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle="#000";
+      for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(matrix[y][x])ctx.fillRect(x*scale,y*scale,scale,scale);
+      return canvas;
+    }
+    // Compact QR Model 2 version 1-L encoder (alphanumeric mode), sufficient for standard asset IDs.
+    function qrAlphanumeric(text){
+      const chars="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:";
+      const raw=text.toUpperCase();if(!raw||raw.length>25||[...raw].some(c=>!chars.includes(c)))throw Error("QR supports asset IDs up to 25 uppercase letters, digits, spaces, and - $ % * + . / :");
+      const bits=[];const put=(v,count)=>{for(let i=count-1;i>=0;i--)bits.push((v>>>i)&1)};
+      put(0b0010,4);put(raw.length,9);
+      for(let i=0;i<raw.length;i+=2){if(i+1<raw.length)put(chars.indexOf(raw[i])*45+chars.indexOf(raw[i+1]),11);else put(chars.indexOf(raw[i]),6)}
+      const capacity=19*8;if(bits.length>capacity)throw Error("Asset ID is too long for this offline QR encoder.");
+      put(0,Math.min(4,capacity-bits.length));while(bits.length%8)bits.push(0);
+      const data=[];for(let i=0;i<bits.length;i+=8){let v=0;for(let j=0;j<8;j++)v=(v<<1)|(bits[i+j]||0);data.push(v)}
+      for(let pad=0;data.length<19;pad++)data.push(pad%2?0x11:0xec);
+      const gfMul=(x,y)=>{let z=0;for(let i=7;i>=0;i--){z=(z<<1)^((z>>>7)*0x11d);if((y>>>i)&1)z^=x}return z&255};
+      let rs=[1];for(let i=0;i<7;i++){const next=Array(rs.length+1).fill(0);for(let j=0;j<rs.length;j++){next[j]^=rs[j];next[j+1]^=gfMul(rs[j],1<<i)}rs=next}
+      const ecc=Array(7).fill(0);for(const b of data){const factor=b^ecc[0];ecc.shift();ecc.push(0);for(let i=0;i<7;i++)ecc[i]^=gfMul(rs[i+1],factor)}
+      const stream=[...data,...ecc],n=21,m=Array.from({length:n},()=>Array(n).fill(null));
+      const set=(x,y,v)=>{if(x>=0&&x<n&&y>=0&&y<n)m[y][x]=!!v};
+      const finder=(ox,oy)=>{for(let dy=-1;dy<=7;dy++)for(let dx=-1;dx<=7;dx++){const x=ox+dx,y=oy+dy;if(x<0||x>=n||y<0||y>=n)continue;const inside=dx>=0&&dx<=6&&dy>=0&&dy<=6;set(x,y,inside&&(dx===0||dx===6||dy===0||dy===6||(dx>=2&&dx<=4&&dy>=2&&dy<=4)))}};
+      finder(0,0);finder(n-7,0);finder(0,n-7);
+      for(let i=8;i<n-8;i++){if(m[6][i]===null)set(i,6,i%2===0);if(m[i][6]===null)set(6,i,i%2===0)}
+      for(let i=0;i<9;i++){if(i!==6){set(8,i,false);set(i,8,false)}}for(let i=0;i<8;i++){set(n-1-i,8,false);set(8,n-1-i,false)}set(8,n-8,true);
+      let bitIndex=0,up=true;
+      for(let right=n-1;right>=1;right-=2){if(right===6)right--;for(let vert=0;vert<n;vert++){const y=up?n-1-vert:vert;for(let j=0;j<2;j++){const x=right-j;if(m[y][x]===null){const v=bitIndex<stream.length*8?((stream[bitIndex>>>3]>>>(7-(bitIndex&7)))&1):0;bitIndex++;set(x,y,(v^( (x+y)%2===0))!==0)}}}up=!up}
+      // Mask 0, error-correction level L format bits; BCH remainder uses generator 0x537.
+      const formatData=(1<<3)|0;let rem=formatData;for(let i=0;i<10;i++)rem=(rem<<1)^(((rem>>>9)&1)*0x537);const fmt=((formatData<<10)|rem)^0x5412;
+      for(let i=0;i<=5;i++)set(8,i,(fmt>>>i)&1);set(8,7,(fmt>>>6)&1);set(8,8,(fmt>>>7)&1);set(7,8,(fmt>>>8)&1);for(let i=9;i<15;i++)set(14-i,8,(fmt>>>i)&1);
+      for(let i=0;i<8;i++)set(n-1-i,8,(fmt>>>i)&1);for(let i=8;i<15;i++)set(8,n-15+i,(fmt>>>i)&1);set(8,n-8,true);
+      return m.map(row=>row.map(Boolean));
+    }
+    function showQr(id){try{const a=assets.find(x=>x.id===id);if(!a)return;displayedQr=id;$("qrMount").replaceChildren();const canvas=makeQrCanvas(id,10);$("qrMount").append(canvas);const label=document.createElement("p");label.textContent=`${a.name} · ${id}`;$("qrMount").append(label);$("qrDialog").showModal()}catch(e){alert(e.message)}}
+    $("assetForm").addEventListener("submit",e=>{e.preventDefault();const id=$("assetId").value.trim().toUpperCase(),edit=$("editId").value;const existing=assets.find(a=>a.id===id);if(existing&&!edit){alert("That asset ID already exists.");return}const prior=edit?assets.find(a=>a.id===edit):null;const record={id,name:$("name").value.trim(),system:$("system").value.trim(),criticality:$("criticality").value,status:$("status").value,location:$("location").value.trim(),owner:$("owner").value.trim(),makeModel:$("makeModel").value.trim(),notes:$("notes").value.trim(),logs:prior?.logs||[],updatedAt:new Date().toISOString()};if(prior)assets=assets.map(a=>a.id===edit?record:a);else assets.unshift(record);persist();clearForm()});
+    $("clearFormBtn").onclick=clearForm;$("newBtn").onclick=()=>{clearForm();$("name").focus()};$("search").addEventListener("input",render);
+    $("assetList").addEventListener("click",e=>{const b=e.target.closest("button[data-action]");if(!b)return;const{id,action}=b.dataset,a=assets.find(x=>x.id===id);if(!a)return;
+      if(action==="qr")showQr(id);if(action==="edit")editAsset(id);
+      if(action==="delete"&&confirm(`Delete ${id} and its local history?`)){assets=assets.filter(x=>x.id!==id);persist()}
+      if(action==="check"){const status=prompt("Maintenance result: In service, Needs attention, or Out of service",a.status||"In service");if(status===null)return;const allowed=["In service","Needs attention","Out of service"];if(!allowed.includes(status)){alert("Use one of the listed status values.");return}const note=prompt("Check notes (optional):","")??"";a.status=status;a.logs=a.logs||[];a.logs.unshift({at:new Date().toISOString(),status,note});a.updatedAt=new Date().toISOString();persist()}
+    });
+    $("exportBtn").onclick=()=>{const blob=new Blob([JSON.stringify({format:"akah-assettrack-backup-v1",exportedAt:new Date().toISOString(),assets},null,2)],{type:"application/json"});const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="akah-assettrack-backup.json";a.click();URL.revokeObjectURL(url)};
+    $("importFile").addEventListener("change",async e=>{try{const data=JSON.parse(await e.target.files[0].text()),incoming=Array.isArray(data)?data:data.assets;if(!Array.isArray(incoming))throw Error("Backup does not contain an asset list.");if(!confirm(`Import ${incoming.length} assets? Matching IDs will be replaced.`))return;const byId=new Map(assets.map(a=>[a.id,a]));incoming.forEach(a=>{if(a&&a.id)byId.set(String(a.id).toUpperCase(),{...a,id:String(a.id).toUpperCase()})});assets=[...byId.values()];persist();alert("Backup imported on this device.")}catch(err){alert("Could not import backup: "+err.message)}finally{e.target.value=""}});
+    $("printBtn").onclick=()=>window.print();
+    $("downloadQrBtn").onclick=()=>{const a=document.createElement("a");a.download=`${displayedQr}-qr.png`;a.href=makeQrCanvas(displayedQr,16).toDataURL("image/png");a.click()};
+    $("closeQrBtn").onclick=()=>$("qrDialog").close();
+    function stopScanner(){if(scannerStream){scannerStream.getTracks().forEach(t=>t.stop());scannerStream=null} $("video").srcObject=null}
+    $("scanBtn").onclick=async()=>{$("scanDialog").showModal();$("scanStatus").textContent="";if(!("BarcodeDetector"in window)||!navigator.mediaDevices?.getUserMedia){$("scanStatus").textContent="Live scanning is not supported here. Enter the printed asset ID below.";return}try{const detector=new BarcodeDetector({formats:["qr_code"]});scannerStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});$("video").srcObject=scannerStream;await $("video").play();const tick=async()=>{if(!scannerStream)return;try{const hits=await detector.detect($("video"));if(hits.length){$("manualQr").value=hits[0].rawValue.trim();lookupQr();return}}catch{}requestAnimationFrame(tick)};tick()}catch(e){$("scanStatus").textContent="Camera unavailable: "+e.message+" Enter the ID manually."}};
+    function lookupQr(){const id=$("manualQr").value.trim().toUpperCase(),asset=assets.find(a=>a.id===id);stopScanner();$("scanDialog").close();if(asset){$("search").value=asset.id;render();editAsset(asset.id)}else alert(`No local asset found for “${id}”. Add it to the register first.`)}
+    $("manualScanBtn").onclick=lookupQr;$("closeScanBtn").onclick=()=>{stopScanner();$("scanDialog").close()};$("scanDialog").addEventListener("close",stopScanner);
+    $("helpBtn").onclick=()=>$("helpDialog").showModal();$("closeHelpBtn").onclick=()=>$("helpDialog").close();
+    $("askAiBtn").onclick=async()=>{const key=$("apiKey").value.trim(),question=$("aiQuestion").value.trim();if(!key){alert("Enter your Gemini API key for this tab.");return}if(!question){alert("Enter a question first.");return}const picked=assets.find(a=>a.id===$("aiAsset").value),context=picked?JSON.stringify({asset:picked,history:picked.logs||[]}):JSON.stringify({assets:assets.map(a=>({id:a.id,name:a.name,system:a.system,status:a.status,criticality:a.criticality,location:a.location,notes:a.notes,logs:a.logs||[]}))});const button=$("askAiBtn");button.disabled=true;button.textContent="Asking Gemini…";$("aiResult").innerHTML='<p class="hint">Sending your question and selected register context to Google Gemini. Internet required.</p>';try{const response=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="+encodeURIComponent(key),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system_instruction:{parts:[{text:"You are a practical school-campus maintenance assistant. Answer only from the asset register record provided; do not invent facts. If information is missing, say it is not recorded. Be concise. For electrical, gas, fire-system, high-voltage or confined-space work, advise following campus permit-to-work rules and using authorized personnel."}]},contents:[{parts:[{text:"REGISTER CONTEXT (JSON):\n"+context+"\n\nQUESTION:\n"+question}]}]})});const data=await response.json();if(!response.ok)throw Error(data.error?.message||`Gemini returned HTTP ${response.status}`);const answer=data.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("\n").trim();if(!answer)throw Error("Gemini returned no answer.");const box=document.createElement("div");box.className="ai-answer";box.textContent=answer;$("aiResult").replaceChildren(box)}catch(err){const box=document.createElement("div");box.className="notice";box.textContent="Gemini request failed: "+err.message;$("aiResult").replaceChildren(box)}finally{button.disabled=false;button.textContent="Ask Gemini (internet required)"}};
+    render();
+  })();
+  </script>
+</body>
+</html>
