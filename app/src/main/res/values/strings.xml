@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">AKAH SOP Register</string>
+    <string name="masthead_title">AGA KHAN ACADEMY</string>
+    <string name="masthead_subtitle">AKAH_SOP_Server · Asset Register</string>
+    <string name="nav_register">Register</string>
+    <string name="nav_scan_qr">Scan QR</string>
+    <string name="nav_qr_labels">QR Labels</string>
+</resources>
