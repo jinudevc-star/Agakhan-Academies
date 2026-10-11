@@ -98,6 +98,33 @@ class ExampleRobolectricTest {
     }
 
     @Test
+    fun `invalid configured LAN server does not prevent saving status offline`() = runBlocking {
+        dao.upsertAsset(
+            AssetEntity(
+                id = "AKA-HYD-HVC-002",
+                name = "Offline HVAC asset",
+                system = "HVAC",
+                status = "In service"
+            )
+        )
+
+        val updated = repository.quickUpdateStatus(
+            assetId = "AKA-HYD-HVC-002",
+            newStatus = "Needs attention",
+            by = "A. Khan",
+            note = "Recorded without network",
+            lanServerUrl = "not a valid server URL"
+        )
+
+        assertEquals("Needs attention", updated?.status)
+        assertTrue(updated?.pendingOfflineSync == true)
+        val persisted = dao.getAssetWithLogsOnce("AKA-HYD-HVC-002")
+        assertEquals("Needs attention", persisted?.asset?.status)
+        assertEquals(1, persisted?.logs?.size)
+        assertTrue(persisted?.logs?.first()?.syncedToServer == false)
+    }
+
+    @Test
     fun `offline asset registration and SOP check recording update Room state`() = runBlocking {
         val createdRes = repository.addNewAssetOffline(
             id = "AKA-HYD-ELE-011",

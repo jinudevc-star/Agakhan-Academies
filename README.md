@@ -16,13 +16,17 @@ View your app in AI Studio: https://ai.studio/apps/38b20e64-3340-47ab-83eb-49d98
 1. Open Android Studio
 2. Select **Open** and choose the directory containing this project
 3. Allow Android Studio to fix any incompatibilities as it imports the project.
-4. Create a file named `.env` in the project directory and set `GEMINI_API_KEY` in that file to your Gemini API key (see `.env.example` for an example)
-5. Remove this line from the app's `build.gradle.kts` file: `signingConfig = signingConfigs.getByName("debugConfig")`
-6. Run the app on an emulator or physical device
-7. If you have already published your app in AI Studio, please [request upload key reset](https://support.google.com/googleplay/android-developer/answer/9842756#zippy=%2Crequest-an-upload-key-reset) in Google Play Console.
+4. (Optional) To use the Gemini maintenance assistant, create `.env` and set `GEMINI_API_KEY` (see `.env.example`). The register does not need an API key.
+5. Select an emulator or connect a device, then run the app.
+
+For a fully offline build, first let Gradle download all required dependencies, then enable Gradle offline mode in Android Studio. You can use the installed app offline without doing this setup again.
+
+## Offline use
+
+The asset register is stored in a local Room database. Asset search, edits, maintenance checks, CSV import, report export, and scheduled reminders work without an internet connection. New or edited records remain marked as pending sync until the configured campus server is reachable. Gemini AI and campus-server synchronization are optional network features; if synchronization fails, register changes are still saved locally.
 
 ## AKAH SOP Register — AssetTrack QR
 
 Campus asset register and SOP maintenance dashboard for Aga Khan Academy, Hyderabad, with QR code scanning, status updates, and an AI maintenance assistant (Gemini). Android app (Kotlin / Jetpack Compose).
 
-**Firebase config:** `app/google-services.json` is not committed (this repo is public). Download it from the Firebase console (project `gen-lang-client-0214481538`) or from AI Studio and place it at `app/google-services.json` before building.
+`app/google-services.json` is not committed. Firebase is not required for the local/offline register.
